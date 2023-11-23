@@ -153,10 +153,10 @@ class Player(object):
         if len(self.path) == 0:
             if len(self.safe):
                 goal_position = self.safe[-1]
-                self.path = self.dfs(cur_pos, goal_position, [])
+                self.path = self.goto(goal_position)
             elif len(self.threat):
                 goal_position = self.threat[-1]
-                self.path = self.dfs(cur_pos, goal_position, [])
+                self.path = self.goto(goal_position)
             else:
                 import sys
                 sys.exit("No solution")
@@ -182,25 +182,27 @@ class Player(object):
         if move == (-1, 0):
             return 'W'
             
-    def dfs(self, cur_pos, goal_position, visited=[]):
-        visited.append(cur_pos)
-        
-        x, y = cur_pos
-        dx, dy = goal_position
-        s = (abs(dx - x), abs(dy - y))
-        if s in [(1,0), (0,1)]:
-            return [goal_position]
-        
-        adj = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
-        adj = list(filter(lambda p: p in self.visited and p not in visited, adj))
-
-        if len(adj) == 0:
-            return None
-        
-        for p in adj:
-            path = self.dfs(p, goal_position, visited)
-            if path:
-                return [p] + path
+    def goto(self, end):
+        start = (self.x, self.y)
+        visited = set()
+        queue = [(start, [])]  # Queue stores tuples of (node, path)
+        visited.add(start)
+        while queue:
+            node, path = queue.pop(0)
             
-        return None
+            if node == end:
+                return path
+            
+            if node not in self.visited:
+                continue
+            
+            x, y = node
+            adj = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+
+            for a in adj:
+                if a not in visited:
+                    visited.add(a)
+                    queue.append((a, path + [a]))
+        
+        return []  # If no path is found
                 
